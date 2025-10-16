@@ -1,11 +1,14 @@
-import Input from './components/Input'
+
+import CustomUrlInput from "./components/CustomUrlInput"
+
+
 
 function App() {
 
 
   return (
     <>
-      <Input />
+      <CustomUrlInput />
     </>
   )
 }
