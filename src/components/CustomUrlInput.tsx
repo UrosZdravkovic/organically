@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import parseUrl, { type ParsedUrl, type UrlType } from '../utils/parseUrl';
 import { IoChevronDown } from 'react-icons/io5';
+import HighlightedUrlPart from '@/utils/HighlightedUrlPart';
 
 
 export default function CustomUrlInput() {
@@ -22,17 +23,26 @@ export default function CustomUrlInput() {
         }
 
         const parsed = parseUrl(inputValue);
-        setUrlData(parsed);
 
         const domainChanged = parsed.rootDomain !== lastRootDomainRef.current;
-        lastRootDomainRef.current = parsed.rootDomain;
+        const pathChanged = parsed.path !== urlData?.path;
+        const subdomainChanged = parsed.subdomain !== urlData?.subdomain;
 
-        // Ako korisnik nije ručno birao tip, ili ako je promenio domen → ažuriraj select
-        if (!isManualSelect || domainChanged) {
-            setSelectedType(parsed.type);
+        lastRootDomainRef.current = parsed.rootDomain;
+        setUrlData(parsed);
+
+        // Ako korisnik promeni strukturu (doda subfolder, subdomen, promeni root domen)
+        // vraćamo automatski mod
+        if (domainChanged || pathChanged || subdomainChanged) {
             setIsManualSelect(false);
         }
-    }, [inputValue, isManualSelect]);
+
+        // Ako nije manuelno izabrao tip — ili smo ga resetovali gore
+        if (!isManualSelect) {
+            setSelectedType(parsed.type);
+        }
+    }, [inputValue]);
+
 
     // 🎯 Zatvori dropdown kada se klikne van komponente
     useEffect(() => {
@@ -95,7 +105,7 @@ export default function CustomUrlInput() {
                             className="flex items-center gap-2 px-3 py-1.5 border border-l-gray-300 rounded-md bg-white hover:bg-gray-50 text-sm transition-colors min-w-[180px] justify-between"
                         >
                             <span className="truncate">{selectedType}</span>
-                            <IoChevronDown 
+                            <IoChevronDown
                                 className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
                             />
                         </button>
@@ -113,12 +123,13 @@ export default function CustomUrlInput() {
                                 key={option.value}
                                 type="button"
                                 onClick={() => handleSelectOption(option.value)}
-                                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 transition-colors flex items-center justify-between ${
-                                    selectedType === option.value ? 'bg-blue-50 text-blue-600' : ''
-                                }`}
+                                className={`w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 transition-colors flex items-center justify-between ${selectedType === option.value ? 'bg-blue-50 text-blue-600' : ''
+                                    }`}
                             >
                                 <div className="flex justify-between items-center w-full">
-                                    <span className="text-gray-500 text-xs">{inputValue}</span>
+                                    <span className="text-gray-500 text-xs">
+                                        <HighlightedUrlPart urlData={urlData!} option={option.value} />
+                                    </span>
                                     <span>{option.label}</span>
                                 </div>
                             </button>
